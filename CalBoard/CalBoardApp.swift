@@ -11,7 +11,7 @@ import SwiftUI
 struct CalBoardApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            StationDeparturesView()
         }
     }
 }
