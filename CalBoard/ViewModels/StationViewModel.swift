@@ -56,10 +56,23 @@ class StationViewModel: ObservableObject {
                 
                 // Process the decoded response
                 let currentTime = Date()
-                let stationDepartures = processTrips(response, forStation: selectedStation.id, after: currentTime)
+                var combinedDepartures: [DepartureInfo] = []
+
+                // Process trips for the primary station ID
+                let primaryDepartures = processTrips(response, forStation: selectedStation.id, after: currentTime)
+                combinedDepartures.append(contentsOf: primaryDepartures)
+
+                // If an alternate ID exists, process trips for it as well
+                if let altId = selectedStation.altId {
+                    let alternateDepartures = processTrips(response, forStation: altId, after: currentTime)
+                    combinedDepartures.append(contentsOf: alternateDepartures)
+                }
+                
+                // Sort all departures by scheduled time
+                let sortedDepartures = combinedDepartures.sorted { $0.scheduledTime < $1.scheduledTime }
                 
                 // Check if departures changed
-                if stationDepartures != oldDepartures {
+                if sortedDepartures != oldDepartures {
                     self.lastUpdateTime = Date()
                 } else {
                     showToast = true
@@ -71,7 +84,7 @@ class StationViewModel: ObservableObject {
                     }
                 }
                 
-                self.departures = stationDepartures
+                self.departures = sortedDepartures
                 self.isLoading = false
             } catch {
                 print("Error processing response:", error)
@@ -87,10 +100,8 @@ class StationViewModel: ObservableObject {
         for entity in response.entities {
             guard let tripUpdate = entity.tripUpdate else { continue }
             
-            // Find all stop time updates for this station
-            let stationUpdates = tripUpdate.stopTimeUpdates.filter {
-                $0.stopId == stationId || (selectedStation.altId != nil && $0.stopId == selectedStation.altId)
-            }
+            // Find all stop time updates for this specific stationId
+            let stationUpdates = tripUpdate.stopTimeUpdates.filter { $0.stopId == stationId }
             
             for update in stationUpdates {
                 guard let departure = update.departure,
