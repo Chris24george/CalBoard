@@ -6,6 +6,8 @@ import SwiftUI
 class StationViewModel: ObservableObject {
     @Published var selectedStation: Station
     @Published var departures: [DepartureInfo] = []
+    @Published var northboundDepartures: [DepartureInfo] = []
+    @Published var southboundDepartures: [DepartureInfo] = []
     @Published var isLoading = false
     @Published var error: Error?
     @Published var lastUpdateTime: Date?
@@ -85,6 +87,8 @@ class StationViewModel: ObservableObject {
                 }
                 
                 self.departures = sortedDepartures
+                self.northboundDepartures = sortedDepartures.filter { $0.direction == "Northbound" }
+                self.southboundDepartures = sortedDepartures.filter { $0.direction == "Southbound" }
                 self.isLoading = false
             } catch {
                 print("Error processing response:", error)

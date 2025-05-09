@@ -37,14 +37,26 @@ struct StationDeparturesView: View {
                         ProgressView()
                             .frame(maxWidth: .infinity)
                             .listRowBackground(Color.clear)
-                    } else if viewModel.departures.isEmpty {
+                    } else if viewModel.northboundDepartures.isEmpty && viewModel.southboundDepartures.isEmpty {
                         Text("No upcoming departures")
                             .foregroundColor(.secondary)
                             .frame(maxWidth: .infinity)
                             .listRowBackground(Color.clear)
                     } else {
-                        ForEach(viewModel.departures) { departure in
-                            DepartureRowView(departure: departure)
+                        if !viewModel.northboundDepartures.isEmpty {
+                            Section(header: Text("Northbound").font(.title2).padding(.vertical, 5)) {
+                                ForEach(viewModel.northboundDepartures) { departure in
+                                    DepartureRowView(departure: departure)
+                                }
+                            }
+                        }
+
+                        if !viewModel.southboundDepartures.isEmpty {
+                            Section(header: Text("Southbound").font(.title2).padding(.vertical, 5)) {
+                                ForEach(viewModel.southboundDepartures) { departure in
+                                    DepartureRowView(departure: departure)
+                                }
+                            }
                         }
                     }
                 }
