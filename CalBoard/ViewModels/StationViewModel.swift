@@ -8,10 +8,14 @@ class StationViewModel: ObservableObject {
     @Published var departures: [DepartureInfo] = []
     @Published var isLoading = false
     @Published var error: Error?
+    @Published var lastUpdateTime: Date?
+    @Published var showToast = false
+    @Published var toastMessage = ""
     
     private var lastFetchTime: Date?
     private let minTimeBetweenFetches: TimeInterval = 60.0
     private let apiClient = CaltrainAPIClient()
+    
     
     init(station: Station = Station.all[0]) {
         self.selectedStation = station
@@ -30,11 +34,20 @@ class StationViewModel: ObservableObject {
         // Silently ignore rapid refreshes
         if let lastFetch = lastFetchTime,
            Date().timeIntervalSince(lastFetch) < minTimeBetweenFetches {
+            showToast = true
+            toastMessage = "Please wait a minute between refreshes"
+            
+            // Hide toast after 2 seconds
+            Task {
+                try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                showToast = false
+            }
             return
         }
         
         isLoading = true
         lastFetchTime = Date()
+        let oldDepartures = departures
         
         Task {
             do {
@@ -44,6 +57,19 @@ class StationViewModel: ObservableObject {
                 // Process the decoded response
                 let currentTime = Date()
                 let stationDepartures = processTrips(response, forStation: selectedStation.id, after: currentTime)
+                
+                // Check if departures changed
+                if stationDepartures != oldDepartures {
+                    self.lastUpdateTime = Date()
+                } else {
+                    showToast = true
+                    toastMessage = "No new updates available"
+                    // Hide toast after 2 seconds
+                    Task {
+                        try? await Task.sleep(nanoseconds: 2 * 1_000_000_000)
+                        showToast = false
+                    }
+                }
                 
                 self.departures = stationDepartures
                 self.isLoading = false

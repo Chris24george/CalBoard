@@ -1,10 +1,3 @@
-//
-//  StationDeparturesView.swift
-//  CalBoard
-//
-//  Created by Chris George on 12/21/24.
-//
-
 import SwiftUI
 
 struct StationDeparturesView: View {
@@ -31,6 +24,12 @@ struct StationDeparturesView: View {
                     .cornerRadius(10)
                 }
                 .padding(.horizontal)
+                
+                if let lastUpdate = viewModel.lastUpdateTime {
+                    Text("Last updated: \(formatTime(lastUpdate))")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
                 
                 // Departures List
                 List {
@@ -64,6 +63,16 @@ struct StationDeparturesView: View {
                     }
                 )
             }
+            .overlay(
+                Group {
+                    if viewModel.showToast {
+                        VStack {
+                            Spacer()
+                            Toast(message: viewModel.toastMessage)
+                        }
+                    }
+                }
+            )
             .alert("Error", isPresented: Binding(
                 get: { viewModel.error != nil },
                 set: { if !$0 { viewModel.error = nil } }
@@ -71,5 +80,11 @@ struct StationDeparturesView: View {
                 Text(viewModel.error?.localizedDescription ?? "Unknown error")
             }
         }
+    }
+    
+    private func formatTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
