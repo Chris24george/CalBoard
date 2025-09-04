@@ -1,0 +1,7 @@
+# Secrets and local config
+CalBoard/Secrets.plist
+*.xcuserstate
+*.xcuserdatad
+DerivedData/
+.DS_Store
+
